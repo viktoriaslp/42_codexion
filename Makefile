@@ -3,7 +3,9 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror -I.
 RM = rm -f
 
-SRCS = main.c /
+SRCS = main.c \
+parser.c \
+coder.c \
 
 HEADER = codexion.h
 OBJS = $(SRCS:.c=.o)

@@ -26,23 +26,55 @@
 #include <stdio.h>     // printf, fprintf
 #include <string.h>    // strcmp, strlen, memset
 
-
 // structs
-typedef struct s_args
+typedef enum e_scheduler
+{
+    FIFO,
+    EDF
+}   t_scheduler;
+	
+typedef struct s_config
 {
 	// only => 0 or integers.
-	int	number_of_coders;
-	int	time_to_burnout;
-	int	time_to_compile;
-	int	time_to_debug;
-	int	time_to_refactor;
-	int	number_of_compiles_required;
-	int	dongle_cooldown;
-	char	*scheduler; // only fifo or edf
-}	t_args;
+	int			number_of_coders;
+	int			time_to_burnout;
+	int			time_to_compile;
+	int			time_to_debug;
+	int			time_to_refactor;
+	int			number_of_compiles_required;
+	int			dongle_cooldown;
+	t_scheduler	scheduler; // only fifo or edf
+}	t_config;
+
+typedef struct s_coder
+{
+	int			id;
+	int			compile_count;
+	int			left_dongle;
+	int			right_dongle;
+	// pthread_t	thread;
+	// int			last_compile_start;
+} t_coder;
+
+typedef struct s_dongle
+{
+	int	id;
+	int	last_release_time;
+} t_dongle;
 
 // Lists of functions
-void parse_args(int count, char **args, t_args *data);
+int	print_usage(void);
+void	*ft_calloc(size_t nmemb, size_t size);
+t_coder *init_coders(int amount);
+
+void	print_config(t_config *data); // TODO: only testing purpose
+
+int parse_args (char **args, int count, t_config *data);
+int	int_checker(const char *nptr);
+int int_args_checker(char **args, int count);
+int scheduler_check(const char *ptr, t_config *data);
+
+
 
 
 #endif
