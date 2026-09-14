@@ -1,43 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   coder.c                                            :+:      :+:    :+:   */
+/*   dongle.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/14 11:30:08 by vslyunko         ###   ########.fr       */
+/*   Created: 2026/09/14 11:24:00 by vslyunko          #+#    #+#             */
+/*   Updated: 2026/09/14 11:30:30 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-t_coder	*init_coders(int amount)
+t_dongle	*init_dongles(int amount)
 {
-	t_coder	*arr_coders;
+	t_dongle *arr_dongles;
 	int		i;
-
-	arr_coders = ft_calloc(amount, sizeof(t_coder));
-	if (!arr_coders)
+	
+	arr_dongles = ft_calloc(amount, sizeof(t_dongle));
+	if (!arr_dongles)
 		return (NULL);
 	i = 0;
 	while (i < amount)
 	{
-		arr_coders[i].id = i + 1;
-		arr_coders[i].left_dongle = i;
-		arr_coders[i].right_dongle = (i + 1) % amount;
+		arr_dongles[i].id = i + 1;
 		i++;
 	}
-	return (arr_coders);
-}
-
-void	*ft_calloc(size_t nmemb, size_t size)
-{
-	void	*memalloc;
-
-	memalloc = (void *) malloc(nmemb * size);
-	if (!memalloc)
-		return (NULL);
-	memset(memalloc, 0, (nmemb * size));
-	return (memalloc);
+	return (arr_dongles);
 }

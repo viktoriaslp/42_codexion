@@ -6,6 +6,7 @@ RM = rm -f
 SRCS = main.c \
 parser.c \
 coder.c \
+dongle.c \
 
 HEADER = codexion.h
 OBJS = $(SRCS:.c=.o)
