@@ -46,8 +46,13 @@ make re         # Recompile everything
 
 
 ## RESOURCES
+general idea about philosopgers: https://medium.com/@ruinadd/philosophers-42-guide-the-dining-philosophers-problem-893a24bc0fe2
+14.09.26: to understand threads - https://www.youtube.com/watch?v=LOfGJcVnvAk
+14.09.26: threads code example - https://www.youtube.com/watch?v=ldJ8WGZVXZk
 
+14.09.26: threads in c list video (main concepts) - https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2
 
+Required Functions and Their Roles - https://studylib.net/doc/27904987/philosophers-guide
 
 ### AI usage
 

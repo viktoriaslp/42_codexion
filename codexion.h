@@ -33,6 +33,22 @@ typedef enum e_scheduler
 	EDF
 }	t_scheduler;
 
+typedef struct s_coder
+{
+	int			id;
+	int			compile_count;
+	int			left_dongle;
+	int			right_dongle;
+	pthread_t	thread;
+	int			last_compile_start;
+}	t_coder;
+
+typedef struct s_dongle
+{
+	int	id;
+	int	last_release_time;
+}	t_dongle;
+
 typedef struct s_config
 {
 	// only => 0 or integers.
@@ -44,37 +60,34 @@ typedef struct s_config
 	int			number_of_compiles_required;
 	int			dongle_cooldown;
 	t_scheduler	scheduler; // only fifo or edf
+	long long	start_time;
+	t_coder		*coders;
+	t_dongle	*dongles;
 }	t_config;
 
-typedef struct s_coder
-{
-	int			id;
-	int			compile_count;
-	int			left_dongle;
-	int			right_dongle;
-	// pthread_t	thread;
-	// int			last_compile_start;
-}	t_coder;
-
-typedef struct s_dongle
-{
-	int	id;
-	int	last_release_time;
-}	t_dongle;
-
-// Lists of functions
+// initializing data structures
 int			print_usage(void);
-void		*ft_calloc(size_t nmemb, size_t size);
+int			parse_args(char **args, int count, t_config *data);
+void		compleate_init(t_config *data);
 t_coder		*init_coders(int amount);
 t_dongle	*init_dongles(int amount);
+long long 	get_timestamp_ms();
 
-
-void		print_config(t_config *data); // TODO: only testing purpose
-void	print_coder_info(t_coder *coders, t_dongle *dongles, int amount);
-
-int			parse_args(char **args, int count, t_config *data);
+// auxiliary functions
 int			int_checker(const char *nptr);
 int			int_args_checker(char **args, int count);
 int			scheduler_check(const char *ptr, t_config *data);
+void		*ft_calloc(size_t nmemb, size_t size);
 
-#endif
+// simulation data
+void		ft_programing(t_coder *coder, t_config *config);
+void		ft_fase(char *state, long long exc_tm, int id, int time);
+
+// memory cleanup
+int	free_struct(int bool, t_config *data);
+
+//TODO: testing, errase
+void		print_config(t_config *data); // TODO: only testing purpose
+void		print_coder_info(t_coder *coders, t_dongle *dongles, int amount);
+
+# endif

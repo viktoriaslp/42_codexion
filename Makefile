@@ -6,7 +6,7 @@ RM = rm -f
 SRCS = main.c \
 parser.c \
 coder.c \
-dongle.c \
+errase_testing.c \
 
 HEADER = codexion.h
 OBJS = $(SRCS:.c=.o)
