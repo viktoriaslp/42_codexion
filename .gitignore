@@ -1,0 +1,11 @@
+# Executable
+codexion
+
+# .0 files
+*.o
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
