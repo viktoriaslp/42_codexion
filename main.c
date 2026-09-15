@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/15 00:20:28 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/15 18:06:04 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,41 +15,54 @@
 int	main(int argc, char **argv)
 {
 	t_config	data;
+	int			i;
 
 	if (argc != 9)
 		return (print_usage());
-	if (parse_args(argv, argc, &data) != 0)
-		return (print_usage());
+	if (init_config(argv, argc, &data) != 0)
+		return (1);
 	if (data.number_of_coders == 0)
 		return (0);
-	compleate_init(&data);
-	if (!data.coders || !data.dongles)
-		return (free_struct(1, &data));
-	
-	print_config(&data);
-	print_coder_info(data.coders, data.dongles, data.number_of_coders);
-	ft_programing(&data.coders[0]);
-	free_struct(0, &data);
+	if (start_simulation(&data) == 1)
+	{
+		clean_up(1, &data);
+		return (1);
+	}
+	i = 0;
+	while (i < data.number_of_coders)
+	{
+		pthread_join(data.coders[i].thread, NULL);
+		i++;
+	}
+	clean_up(0, &data);
 }
 
-int	free_struct(int bool, t_config *data)
-{
+int	clean_up(int bool, t_config *data)
+{	
+	pthread_mutex_destroy(&data->burn_mutex);
+	pthread_mutex_destroy(&data->ncr_mutex);
+	pthread_mutex_destroy(&data->print_mutex);
 	if (data->coders)
 		free(data->coders);
 	if (data->dongles)
-		free(data->dongles);
+		clean_dongles(data);
 	return (bool);
 }	
-void	compleate_init(t_config *data)
+
+void	clean_dongles(t_config *data)
 {
-	data->start_time = get_timestamp_ms();
-	printf("Start time: %lld\n", data->start_time);
+	int	i;
 	
-	data->coders = init_coders(data->number_of_coders, data);
-	data->dongles = init_dongles(data->number_of_coders);
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		pthread_mutex_destroy(&data->dongles[i].mutex);
+		i++;
+	}
+	free(data->dongles);
 }
 
-long long get_timestamp_ms()
+long long get_time_ms()
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);

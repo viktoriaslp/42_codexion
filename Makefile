@@ -5,7 +5,8 @@ RM = rm -f
 
 SRCS = main.c \
 parser.c \
-coder.c \
+config_init.c \
+simulation.c \
 errase_testing.c \
 
 HEADER = codexion.h

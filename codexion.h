@@ -46,33 +46,40 @@ typedef struct s_coder
 
 typedef struct s_dongle
 {
-	int			id;
-	long long	last_release_time;
+	int				id;
+	long long		last_release_time;
+	pthread_mutex_t	mutex;
 }	t_dongle;
 
 typedef struct s_config
 {
 	// only => 0 or integers.
-	int			number_of_coders;
-	int			time_to_burnout;
-	int			time_to_compile;
-	int			time_to_debug;
-	int			time_to_refactor;
-	int			number_of_compiles_required;
-	int			dongle_cooldown;
-	t_scheduler	scheduler; // only fifo or edf
-	long long	start_time;
-	t_coder		*coders;
-	t_dongle	*dongles;
+	int				number_of_coders;
+	int				time_to_burnout;
+	int				time_to_compile;
+	int				time_to_debug;
+	int				time_to_refactor;
+	int				number_of_compiles_required;
+	int				dongle_cooldown;
+	t_scheduler		scheduler; // only fifo or edf
+	long long		start_time;
+	t_coder			*coders;
+	t_dongle		*dongles;
+	pthread_mutex_t	burn_mutex;
+	pthread_mutex_t	ncr_mutex;
+	pthread_mutex_t	print_mutex;
+
 }	t_config;
 
 // initializing data structures
 int			print_usage(void);
-int			parse_args(char **args, int count, t_config *data);
-void		compleate_init(t_config *data);
-t_coder		*init_coders(int amount, t_config *config);
+int			init_config(char **args, int count, t_config *data);
+int	parse_args(char **args, int count, t_config *data);
+t_coder		*init_coders(t_config *config);
 t_dongle	*init_dongles(int amount);
-long long 	get_timestamp_ms();
+long long 	get_time_ms();
+int	init_mnt_mtx(t_config *data);
+
 
 // auxiliary functions
 int			int_checker(const char *nptr);
@@ -81,11 +88,15 @@ int			scheduler_check(const char *ptr, t_config *data);
 void		*ft_calloc(size_t nmemb, size_t size);
 
 // simulation data
-void		ft_programing(t_coder *coder);
+int		start_simulation(t_config *data);
+void	*coder_routine(void *args);
 void    log_event(t_coder *coder, const char *message);
+void	take_dongles(t_coder *coder);
+void	return_dongles(t_coder *coder);
 
-// memory cleanup
-int	free_struct(int bool, t_config *data);
+// memory up
+int	clean_up(int bool, t_config *data);
+void	clean_dongles(t_config *data);
 
 //TODO: testing, errase
 void		print_config(t_config *data); // TODO: only testing purpose
