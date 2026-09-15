@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   coder.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/14 16:52:40 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/15 00:24:01 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-t_coder	*init_coders(int amount)
+t_coder	*init_coders(int amount, t_config *config)
 {
 	t_coder	*arr_coders;
 	int		i;
@@ -26,6 +26,7 @@ t_coder	*init_coders(int amount)
 		arr_coders[i].id = i + 1;
 		arr_coders[i].left_dongle = i;
 		arr_coders[i].right_dongle = (i + 1) % amount;
+        arr_coders[i].config = config;
 		i++;
 	}
 	return (arr_coders);
@@ -59,26 +60,28 @@ void	*ft_calloc(size_t nmemb, size_t size)
 	return (memalloc);
 }
 
-void	ft_programing(t_coder *coder, t_config *config)
+void	ft_programing(t_coder *coder)
 {
-	long long	time_ms;
-	//TOTO: take each of the dongles.
-	time_ms = get_timestamp_ms() - config->start_time;
-	printf("%lld %d has taken a dongle\n", time_ms, coder->id);
-	time_ms = get_timestamp_ms() - config->start_time;
-	printf("%lld %d has taken a dongle\n", time_ms, coder->id);
-	time_ms = get_timestamp_ms() - config->start_time;
-	ft_fase("is compiling\n", config->time_to_compile, coder->id, time_ms);
-	//TODO: leave each of the dongles and set the cooldown time
-	coder->compile_count++;
-	time_ms = get_timestamp_ms() - config->start_time;
-	ft_fase("is debugging\n", config->time_to_debug, coder->id, time_ms);
-	time_ms = get_timestamp_ms() - config->start_time;
-	ft_fase("is refactoring\n", config->time_to_refactor, coder->id, time_ms);
+    while (coder->compile_count < coder->config->number_of_compiles_required)
+    {
+        //TOTO: take each of the dongles.
+        log_event(coder, "has taken a dongle");
+        log_event(coder, "has taken a dongle");
+        log_event(coder, "is compiling");
+        usleep(coder->config->time_to_compile * 1000);
+        //TODO: leave each of the dongles and set the cooldown time
+        coder->compile_count++;
+        log_event(coder, "is debugging");
+        usleep(coder->config->time_to_debug * 1000);
+        log_event(coder, "is refactoring");
+        usleep(coder->config->time_to_refactor * 1000);
+    }
 }
 
-void	ft_fase(char *state, long long exc_tm, int id, int time)
+void    log_event(t_coder *coder, const char *message)
 {
-	printf("%d %d %s", time, id, state);
-	usleep(exc_tm * 1000);
+    long long elapsed;
+
+    elapsed = get_timestamp_ms() - coder->config->start_time;
+    printf("%lld %d %s\n", elapsed, coder->id, message);
 }

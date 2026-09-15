@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/14 17:08:53 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/15 00:20:28 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,11 +28,10 @@ int	main(int argc, char **argv)
 	
 	print_config(&data);
 	print_coder_info(data.coders, data.dongles, data.number_of_coders);
-	while (data.coders[0].compile_count < data.number_of_compiles_required)
-		ft_programing(&data.coders[0], &data);
+	ft_programing(&data.coders[0]);
 	free_struct(0, &data);
-
 }
+
 int	free_struct(int bool, t_config *data)
 {
 	if (data->coders)
@@ -46,7 +45,7 @@ void	compleate_init(t_config *data)
 	data->start_time = get_timestamp_ms();
 	printf("Start time: %lld\n", data->start_time);
 	
-	data->coders = init_coders(data->number_of_coders);
+	data->coders = init_coders(data->number_of_coders, data);
 	data->dongles = init_dongles(data->number_of_coders);
 }
 

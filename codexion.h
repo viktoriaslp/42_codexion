@@ -35,18 +35,19 @@ typedef enum e_scheduler
 
 typedef struct s_coder
 {
-	int			id;
-	int			compile_count;
-	int			left_dongle;
-	int			right_dongle;
-	pthread_t	thread;
-	int			last_compile_start;
+	int				id;
+	int				compile_count;
+	int				left_dongle;
+	int				right_dongle;
+	pthread_t		thread;
+	long long		last_compile_start;
+	struct s_config	*config;
 }	t_coder;
 
 typedef struct s_dongle
 {
-	int	id;
-	int	last_release_time;
+	int			id;
+	long long	last_release_time;
 }	t_dongle;
 
 typedef struct s_config
@@ -69,7 +70,7 @@ typedef struct s_config
 int			print_usage(void);
 int			parse_args(char **args, int count, t_config *data);
 void		compleate_init(t_config *data);
-t_coder		*init_coders(int amount);
+t_coder		*init_coders(int amount, t_config *config);
 t_dongle	*init_dongles(int amount);
 long long 	get_timestamp_ms();
 
@@ -80,8 +81,8 @@ int			scheduler_check(const char *ptr, t_config *data);
 void		*ft_calloc(size_t nmemb, size_t size);
 
 // simulation data
-void		ft_programing(t_coder *coder, t_config *config);
-void		ft_fase(char *state, long long exc_tm, int id, int time);
+void		ft_programing(t_coder *coder);
+void    log_event(t_coder *coder, const char *message);
 
 // memory cleanup
 int	free_struct(int bool, t_config *data);
