@@ -6,6 +6,7 @@ RM = rm -f
 SRCS = main.c \
 parser.c \
 config_init.c \
+monitor.c \
 simulation.c \
 errase_testing.c \
 

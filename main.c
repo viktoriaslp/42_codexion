@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/15 18:06:04 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/16 23:02:08 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ int	main(int argc, char **argv)
 	if (init_config(argv, argc, &data) != 0)
 		return (1);
 	if (data.number_of_coders == 0)
+	// TODO: no  clean up done here. maybe include this inside init_config
 		return (0);
 	if (start_simulation(&data) == 1)
 	{
@@ -34,6 +35,7 @@ int	main(int argc, char **argv)
 		pthread_join(data.coders[i].thread, NULL);
 		i++;
 	}
+	pthread_join(data.monitor_thread, NULL);
 	clean_up(0, &data);
 }
 

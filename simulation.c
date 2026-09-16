@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/15 13:26:26 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/15 19:07:58 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/16 23:25:02 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ int	start_simulation(t_config *data)
 		}
 		i++;
 	}
+	if (pthread_create(&data->monitor_thread, NULL, monitor, data) != 0)
+		return (1);
 	return (0);
 }
 
@@ -37,7 +39,7 @@ void	*coder_routine(void *args)
 	t_coder	*coder;
 
 	coder = (t_coder *)args;
-    while (coder->compile_count < coder->config->number_of_compiles_required)
+    while (coder->compile_count < coder->config->number_of_compiles_required && coder->config->end == 0)
     {
 		take_dongles(coder);
         log_event(coder, "is compiling");

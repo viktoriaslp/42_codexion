@@ -68,6 +68,8 @@ typedef struct s_config
 	pthread_mutex_t	burn_mutex;
 	pthread_mutex_t	ncr_mutex;
 	pthread_mutex_t	print_mutex;
+	int				end; // 0: no, n: burn, -1: finish
+	pthread_t		monitor_thread;
 
 }	t_config;
 
@@ -97,6 +99,13 @@ void	return_dongles(t_coder *coder);
 // memory up
 int	clean_up(int bool, t_config *data);
 void	clean_dongles(t_config *data);
+
+// monitor
+void    *monitor(void *arg);
+void    check_done(t_config *data);
+void    check_burn(t_config *data);
+int sim_running(t_config *data);
+
 
 //TODO: testing, errase
 void		print_config(t_config *data); // TODO: only testing purpose

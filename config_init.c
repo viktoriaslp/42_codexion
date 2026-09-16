@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   coder.c                                            :+:      :+:    :+:   */
+/*   config_init.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/15 18:03:50 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/16 23:08:01 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ int	init_config(char **args, int count, t_config *data)
 		print_usage();
 		return (1);
 	}
+	data->end = 0;
 	data->coders = init_coders(data);
 	if (!data->coders)
 		return (1);
