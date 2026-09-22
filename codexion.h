@@ -47,8 +47,10 @@ typedef struct s_coder
 typedef struct s_dongle
 {
 	int				id;
-	long long		last_release_time;
+	int				in_use;
+	long long		available_at;
 	pthread_mutex_t	mutex;
+	pthread_cond_t	cond;
 }	t_dongle;
 
 typedef struct s_config
@@ -80,6 +82,7 @@ int	parse_args(char **args, int count, t_config *data);
 t_coder		*init_coders(t_config *config);
 t_dongle	*init_dongles(int amount);
 long long 	get_time_ms();
+void	ms_to_timespec(long long ms, struct timespec *ts);
 int	init_mnt_mtx(t_config *data);
 
 
@@ -93,12 +96,15 @@ void		*ft_calloc(size_t nmemb, size_t size);
 int		start_simulation(t_config *data);
 void	*coder_routine(void *args);
 void    log_event(t_coder *coder, const char *message);
-void	take_dongles(t_coder *coder);
+void	take_two_dongles(t_coder *coder);
+void	take_dongle(t_coder *coder, t_dongle *dongle);
+void	release_dongle(t_coder *coder, t_dongle *dongle);
 void	return_dongles(t_coder *coder);
 
 // memory up
-int	clean_up(int bool, t_config *data);
+int	clean_up(int status, t_config *data);
 void	clean_dongles(t_config *data);
+void	c_m_destroy(int i, t_dongle *dongles);
 
 // monitor
 void    *monitor(void *arg);

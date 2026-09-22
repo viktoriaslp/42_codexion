@@ -17,7 +17,7 @@ void	print_coder_info(t_coder *coders, t_dongle *dongles, int amount)
 	while (i < amount)
 	{
 		printf("dongle_id: %d\n", dongles[i].id);
-		printf("	dongle_release_time: %lld\n", dongles[i].last_release_time);
+		printf("	dongle_release_time: %lld\n", dongles[i].available_at);
 		i++;
 	}
 }

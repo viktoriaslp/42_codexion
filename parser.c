@@ -6,7 +6,7 @@
 /*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/15 18:03:43 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/22 21:38:07 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ int	parse_args(char **args, int count, t_config *data)
 		data->dongle_cooldown = atoi(args[7]);
 	}
 	if (scheduler_check(args[count - 1], data) == 1)
+		return (1);
+	if (data->number_of_coders == 0)
 		return (1);
 	return (0);
 }

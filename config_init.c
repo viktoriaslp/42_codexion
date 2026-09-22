@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config_init.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/16 23:08:01 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/22 21:31:43 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,14 +72,28 @@ t_dongle	*init_dongles(int amount)
 		arr_dongles[i].id = i + 1;
 		if (pthread_mutex_init(&arr_dongles[i].mutex, NULL) != 0)
 		{
-			while (--i >= 0)
-				pthread_mutex_destroy(&arr_dongles[i].mutex);
+			c_m_destroy(i, arr_dongles);
 			free(arr_dongles);
+			return (NULL);
+		}
+		if (pthread_cond_init(&arr_dongles[i].cond, NULL) != 0)
+		{
+			pthread_mutex_destroy(&arr_dongles[i].mutex);
+			c_m_destroy(i, arr_dongles);
 			return (NULL);
 		}
 		i++;
 	}
 	return (arr_dongles);
+}
+
+void	c_m_destroy(int i, t_dongle *dongles)
+{
+	while (--i >= 0)
+	{
+		pthread_cond_destroy(&dongles[i].cond);
+		pthread_mutex_destroy(&dongles[i].mutex);
+	}
 }
 
 // returns 0 in case of succes || returns 1 in case of failure

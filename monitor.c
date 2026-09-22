@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   monitor.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/16 23:10:07 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/22 22:21:06 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void    *monitor(void *arg)
 void    check_burn(t_config *data)
 {
     int	i;
-	int	time_sc;
+	long long	time_sc;
 
 	i = 0;
 	while (i < data->number_of_coders)
