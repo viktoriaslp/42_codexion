@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/15 13:26:26 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/23 23:27:42 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/24 17:44:04 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,11 @@ int	take_dongle(t_coder *coder, t_dongle *dongle)
 	struct timespec	timeout;
 
 	pthread_mutex_lock(&dongle->mutex);
+	add_to_queue(dongle, coder);
 	while ((dongle->in_use || get_time_ms() < dongle->available_at) && coder->config->end == 0)
 	{
+		if (dongle->queue[0] != coder)
+			pthread_cond_wait(&dongle->cond, &dongle->mutex);
 		if (dongle->in_use)
 			pthread_cond_wait(&dongle->cond, &dongle->mutex);
 		else
@@ -94,6 +97,7 @@ int	take_dongle(t_coder *coder, t_dongle *dongle)
 		return (0);
 	}
 	dongle->in_use = 1;
+	pop_from_queue(dongle);
 	pthread_mutex_unlock(&dongle->mutex);
 	log_event(coder, "has taken a dongle");
 	return (1);
@@ -113,3 +117,4 @@ void	release_dongle(t_coder *coder, t_dongle *dongle)
 	pthread_cond_broadcast(&dongle->cond);
 	pthread_mutex_unlock(&dongle->mutex);
 }
+

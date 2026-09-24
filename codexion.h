@@ -51,6 +51,8 @@ typedef struct s_dongle
 	long long		available_at;
 	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
+	t_coder			*queue[2];
+	int				queue_size;
 }	t_dongle;
 
 typedef struct s_config
@@ -100,6 +102,8 @@ int	take_two_dongles(t_coder *coder);
 int		take_dongle(t_coder *coder, t_dongle *dongle);
 void	release_dongle(t_coder *coder, t_dongle *dongle);
 void	return_dongles(t_coder *coder);
+void    add_to_queue(t_dongle *dongle, t_coder *coder);
+t_coder	*pop_from_queue(t_dongle *dongle);
 
 // memory up
 int	clean_up(int status, t_config *data);
@@ -111,6 +115,8 @@ void    *monitor(void *arg);
 void    check_done(t_config *data);
 void    check_burn(t_config *data);
 int sim_running(t_config *data);
+void	wake_all_coders(t_config *data);
+
 
 
 //TODO: testing, errase

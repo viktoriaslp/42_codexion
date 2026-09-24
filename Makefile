@@ -8,6 +8,7 @@ parser.c \
 config_init.c \
 monitor.c \
 simulation.c \
+heap.c \
 errase_testing.c \
 
 HEADER = codexion.h
