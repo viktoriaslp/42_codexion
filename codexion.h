@@ -96,8 +96,8 @@ void		*ft_calloc(size_t nmemb, size_t size);
 int		start_simulation(t_config *data);
 void	*coder_routine(void *args);
 void    log_event(t_coder *coder, const char *message);
-void	take_two_dongles(t_coder *coder);
-void	take_dongle(t_coder *coder, t_dongle *dongle);
+int	take_two_dongles(t_coder *coder);
+int		take_dongle(t_coder *coder, t_dongle *dongle);
 void	release_dongle(t_coder *coder, t_dongle *dongle);
 void	return_dongles(t_coder *coder);
 

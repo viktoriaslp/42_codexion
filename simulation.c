@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/15 13:26:26 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/22 23:07:14 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/23 23:27:42 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,8 @@ void	*coder_routine(void *args)
 	coder = (t_coder *)args;
     while (coder->compile_count < coder->config->number_of_compiles_required && coder->config->end == 0)
     {
-		take_two_dongles(coder);
+		if (!take_two_dongles(coder))
+			break ;
         log_event(coder, "is compiling");
 		coder->last_compile_start = get_time_ms();
         usleep(coder->config->time_to_compile * 1000);
@@ -65,18 +66,19 @@ void    log_event(t_coder *coder, const char *message)
 	pthread_mutex_unlock(&coder->config->print_mutex);
 }
 
-void	take_two_dongles(t_coder *coder)
+int	take_two_dongles(t_coder *coder)
 {
-	take_dongle(coder, &coder->config->dongles[coder->left_dongle]);
-	take_dongle(coder, &coder->config->dongles[coder->right_dongle]);
+	if (!take_dongle(coder, &coder->config->dongles[coder->left_dongle]) || !take_dongle(coder, &coder->config->dongles[coder->right_dongle]))
+		return (0);
+	return (1);
 }
 
-void	take_dongle(t_coder *coder, t_dongle *dongle)
+int	take_dongle(t_coder *coder, t_dongle *dongle)
 {
 	struct timespec	timeout;
 
 	pthread_mutex_lock(&dongle->mutex);
-	while (dongle->in_use || get_time_ms() < dongle->available_at)
+	while ((dongle->in_use || get_time_ms() < dongle->available_at) && coder->config->end == 0)
 	{
 		if (dongle->in_use)
 			pthread_cond_wait(&dongle->cond, &dongle->mutex);
@@ -86,9 +88,15 @@ void	take_dongle(t_coder *coder, t_dongle *dongle)
 			pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &timeout);
 		}
 	}
+	if (coder->config->end != 0)
+	{
+		pthread_mutex_unlock(&dongle->mutex);
+		return (0);
+	}
 	dongle->in_use = 1;
 	pthread_mutex_unlock(&dongle->mutex);
 	log_event(coder, "has taken a dongle");
+	return (1);
 }
 
 void	return_dongles(t_coder *coder)

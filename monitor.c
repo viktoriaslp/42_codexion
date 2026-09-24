@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   monitor.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/22 22:21:06 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/23 23:13:33 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,17 @@ void    check_burn(t_config *data)
 		i++;
 	}
 	return ;
+}
+
+void	wake_all_coders(t_config *data)
+{
+	int	i;
+
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		pthread_cond_broadcast(&data->dongles[i].cond);
+	}
 }
 
 void    check_done(t_config *data)
