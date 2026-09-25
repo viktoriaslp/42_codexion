@@ -57,3 +57,4 @@ Required Functions and Their Roles - https://studylib.net/doc/27904987/philosoph
 ### AI usage
 
 
+Sí, te entiendo. Y creo que ahí está justo el lío: si quieres comprobar si puede coger los dos, esa comprobación ya no pertenece realmente a take_dongle().

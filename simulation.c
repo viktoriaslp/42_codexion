@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/15 13:26:26 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/24 17:44:04 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/25 22:44:47 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,21 @@ int	start_simulation(t_config *data)
 
 	data->start_time = get_time_ms();
 	i = 0;
-	while(i < data->number_of_coders)
+	while (i < data->number_of_coders)
 	{
-		data->coders[i].last_compile_start = data->start_time;
-		if(pthread_create(&data->coders[i].thread, NULL, coder_routine, &data->coders[i]) != 0)
+		set_last_compile(&data->coders[i], data->start_time);
+		if (pthread_create(&data->coders[i].thread, NULL, coder_routine, &data->coders[i]) != 0)
 		{
-			while (--i >= 0)
-				pthread_join(data->coders[i].thread, NULL);
+			stop_created_coders(data, i);
 			return (1);
 		}
 		i++;
 	}
 	if (pthread_create(&data->monitor_thread, NULL, monitor, data) != 0)
+	{
+		stop_created_coders(data, i);
 		return (1);
+	}
 	return (0);
 }
 
@@ -39,37 +41,115 @@ void	*coder_routine(void *args)
 	t_coder	*coder;
 
 	coder = (t_coder *)args;
-    while (coder->compile_count < coder->config->number_of_compiles_required && coder->config->end == 0)
-    {
+	while (get_compile_count(coder) < coder->config->number_of_compiles_required && get_end(coder->config) == 0)
+	{
 		if (!take_two_dongles(coder))
 			break ;
-        log_event(coder, "is compiling");
-		coder->last_compile_start = get_time_ms();
-        usleep(coder->config->time_to_compile * 1000);
-        coder->compile_count++;
+		if (!begin_compile(coder))
+			break ;
+		log_event(coder, "is compiling");
+		if (!wait_ms(coder->config, coder->config->time_to_compile))
+			{
+				return_dongles(coder);
+				break ;
+			}
+		increment_compile_count(coder);
 		return_dongles(coder);
-        log_event(coder, "is debugging");
-        usleep(coder->config->time_to_debug * 1000);
-        log_event(coder, "is refactoring");
-        usleep(coder->config->time_to_refactor * 1000);
-    }
+		log_event(coder, "is debugging");
+		if (!wait_ms(coder->config, coder->config->time_to_debug))
+			break ;
+		log_event(coder, "is refactoring");
+		if (!wait_ms(coder->config, coder->config->time_to_refactor))
+			break ;
+	}
 	return (NULL);
 }
 
-void    log_event(t_coder *coder, const char *message)
+void	log_event(t_coder *coder, const char *message)
 {
-    long long elapsed;
+	long long	elapsed;
 
-    elapsed = get_time_ms() - coder->config->start_time;
 	pthread_mutex_lock(&coder->config->print_mutex);
-    printf("%lld %d %s\n", elapsed, coder->id, message);
+	if (get_end(coder->config) != 0 && strcmp(message, "burned out") != 0)
+	{		
+		pthread_mutex_unlock(&coder->config->print_mutex);
+		return ;
+	}	
+	elapsed = get_time_ms() - coder->config->start_time;
+	printf("%lld %d %s\n", elapsed, coder->id, message);
 	pthread_mutex_unlock(&coder->config->print_mutex);
+}
+
+int	wait_ms(t_config *data, int duration)
+{
+	long long	start;
+
+	start = get_time_ms();
+	while (get_time_ms() - start < duration)
+	{
+		if (get_end(data) != 0)
+			return (0);
+		usleep(1000);
+	}
+	return (1);
+}
+
+int	begin_compile(t_coder *coder)
+{
+	long long	now;
+
+	pthread_mutex_lock(&coder->state_mutex);
+	pthread_mutex_lock(&coder->config->end_mutex);
+
+	now = get_time_ms();
+	if (coder->config->end != 0)
+	{
+		pthread_mutex_unlock(&coder->config->end_mutex);
+		pthread_mutex_unlock(&coder->state_mutex);
+		return (0);
+	}
+	if (now - coder->last_compile_start >= coder->config->time_to_burnout)
+	{
+		coder->config->end = coder->id;
+		pthread_mutex_unlock(&coder->config->end_mutex);
+		pthread_mutex_unlock(&coder->state_mutex);
+		return (0);
+	}
+	coder->last_compile_start = now;
+
+	pthread_mutex_unlock(&coder->config->end_mutex);
+	pthread_mutex_unlock(&coder->state_mutex);
+	return (1);
 }
 
 int	take_two_dongles(t_coder *coder)
 {
-	if (!take_dongle(coder, &coder->config->dongles[coder->left_dongle]) || !take_dongle(coder, &coder->config->dongles[coder->right_dongle]))
+	t_dongle	*first;
+	t_dongle	*second;
+
+	first = &coder->config->dongles[coder->left_dongle];
+	second = &coder->config->dongles[coder->right_dongle];
+	if (coder->left_dongle > coder->right_dongle)
+	{
+		first = &coder->config->dongles[coder->right_dongle];
+		second = &coder->config->dongles[coder->left_dongle];
+	}
+	if (coder->left_dongle == coder->right_dongle)
+	{
+		if (!take_dongle(coder, first))
+			return (0);
+		while (get_end(coder->config) == 0)
+			usleep(1000);
+		return_dongles(coder);
 		return (0);
+	}
+	if (!take_dongle(coder, first))
+		return (0);
+	if (!take_dongle(coder, second))
+	{
+		release_dongle(coder, first);
+		return (0);
+	}
 	return (1);
 }
 
@@ -79,11 +159,11 @@ int	take_dongle(t_coder *coder, t_dongle *dongle)
 
 	pthread_mutex_lock(&dongle->mutex);
 	add_to_queue(dongle, coder);
-	while ((dongle->in_use || get_time_ms() < dongle->available_at) && coder->config->end == 0)
+	while ((dongle->queue[0] != coder || dongle->in_use || get_time_ms() < dongle->available_at) && get_end(coder->config) == 0)
 	{
 		if (dongle->queue[0] != coder)
 			pthread_cond_wait(&dongle->cond, &dongle->mutex);
-		if (dongle->in_use)
+		else if (dongle->in_use)
 			pthread_cond_wait(&dongle->cond, &dongle->mutex);
 		else
 		{
@@ -91,7 +171,7 @@ int	take_dongle(t_coder *coder, t_dongle *dongle)
 			pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &timeout);
 		}
 	}
-	if (coder->config->end != 0)
+	if (get_end(coder->config) != 0)
 	{
 		pthread_mutex_unlock(&dongle->mutex);
 		return (0);
@@ -117,4 +197,3 @@ void	release_dongle(t_coder *coder, t_dongle *dongle)
 	pthread_cond_broadcast(&dongle->cond);
 	pthread_mutex_unlock(&dongle->mutex);
 }
-

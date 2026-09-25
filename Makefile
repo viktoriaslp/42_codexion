@@ -1,6 +1,6 @@
 NAME = codexion
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -I.
+CFLAGS = -Wall -Wextra -Werror -pthread -I.
 RM = rm -f
 
 SRCS = main.c \
@@ -9,7 +9,7 @@ config_init.c \
 monitor.c \
 simulation.c \
 heap.c \
-errase_testing.c \
+mutex_helpers.c
 
 HEADER = codexion.h
 OBJS = $(SRCS:.c=.o)

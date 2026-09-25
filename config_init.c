@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config_init.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/22 21:31:43 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/25 21:43:25 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,19 +20,21 @@ int	init_config(char **args, int count, t_config *data)
 		return (1);
 	}
 	data->end = 0;
+	if (init_data_mtx(data) != 0)
+		return (1);
 	data->coders = init_coders(data);
 	if (!data->coders)
+	{
+		pthread_mutex_destroy(&data->end_mutex);
+		pthread_mutex_destroy(&data->print_mutex);
 		return (1);
+	}
 	data->dongles = init_dongles(data->number_of_coders);
 	if (!data->dongles)
 	{
-		free(data->coders);
-		return (1);
-	}
-	if (init_mnt_mtx(data) != 0)
-	{
-		free(data->coders);
-		clean_dongles(data);
+		pthread_mutex_destroy(&data->end_mutex);
+		pthread_mutex_destroy(&data->print_mutex);
+		clean_coders(data);
 		return (1);
 	}
 	return (0);
@@ -52,7 +54,14 @@ t_coder	*init_coders(t_config *config)
 		arr_coders[i].id = i + 1;
 		arr_coders[i].left_dongle = i;
 		arr_coders[i].right_dongle = (i + 1) % config->number_of_coders;
-        arr_coders[i].config = config;
+		arr_coders[i].config = config;
+		if (pthread_mutex_init(&arr_coders[i].state_mutex, NULL) != 0)
+		{
+			while (--i >= 0)
+				pthread_mutex_destroy(&arr_coders[i].state_mutex);
+			free(arr_coders);
+			return (NULL);
+		}
 		i++;
 	}
 	return (arr_coders);
@@ -60,9 +69,9 @@ t_coder	*init_coders(t_config *config)
 
 t_dongle	*init_dongles(int amount)
 {
-	t_dongle *arr_dongles;
-	int		i;
-	
+	t_dongle	*arr_dongles;
+	int			i;
+
 	arr_dongles = ft_calloc(amount, sizeof(t_dongle));
 	if (!arr_dongles)
 		return (NULL);
@@ -80,6 +89,7 @@ t_dongle	*init_dongles(int amount)
 		{
 			pthread_mutex_destroy(&arr_dongles[i].mutex);
 			c_m_destroy(i, arr_dongles);
+			free(arr_dongles);
 			return (NULL);
 		}
 		i++;
@@ -97,19 +107,13 @@ void	c_m_destroy(int i, t_dongle *dongles)
 }
 
 // returns 0 in case of succes || returns 1 in case of failure
-int	init_mnt_mtx(t_config *data)
+int	init_data_mtx(t_config *data)
 {
-	if (pthread_mutex_init(&data->burn_mutex, NULL) != 0)
-		return (1);
-	if (pthread_mutex_init(&data->ncr_mutex, NULL) != 0)
-	{
-		pthread_mutex_destroy(&data->burn_mutex);
-		return (1);
-	}
 	if (pthread_mutex_init(&data->print_mutex, NULL) != 0)
+		return (1);
+	if (pthread_mutex_init(&data->end_mutex, NULL) != 0)
 	{
-		pthread_mutex_destroy(&data->burn_mutex);
-		pthread_mutex_destroy(&data->ncr_mutex);
+		pthread_mutex_destroy(&data->print_mutex);
 		return (1);
 	}
 	return (0);
@@ -125,4 +129,3 @@ void	*ft_calloc(size_t nmemb, size_t size)
 	memset(memalloc, 0, (nmemb * size));
 	return (memalloc);
 }
-

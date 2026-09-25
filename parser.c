@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/22 21:38:07 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/25 21:50:28 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,11 +73,12 @@ int	int_checker(const char *nptr)
 		i++;
 	while (nptr[i] >= '0' && nptr[i] <= '9')
 	{
+		if (nb > (2147483647 - (nptr[i] - '0')) / 10)
+			return (1);
 		nb = nb * 10 + (nptr[i] - '0');
 		i++;
 	}
-	if ((nptr[i] != '\0' || nptr[0] == '\0')
-		|| (nb < -2147483648 || nb > 2147483647))
+	if ((nptr[i] != '\0' || nptr[0] == '\0') || nb > 2147483647)
 	{
 		return (1);
 	}

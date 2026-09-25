@@ -3,42 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   monitor.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vslyunko <vslyunko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/24 15:05:34 by vslyunko         ###   ########.fr       */
+/*   Updated: 2026/09/25 21:49:17 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void    *monitor(void *arg)
+void	*monitor(void *arg)
 {
-    t_config    *data;
+	t_config	*data;
 
-    data = (t_config *)arg;
-    while (sim_running(data))
-    {
-        check_burn(data);
-		if (data->end == 0)
+	data = (t_config *)arg;
+	while (sim_running(data))
+	{
+		check_burn(data);
+		if (get_end(data) == 0)
 			check_done(data);
-        usleep(1000);
-    }
-    return (NULL);
+		else
+		{
+			sim_running(data);
+			return (NULL);
+		}
+		usleep(1000);
+	}
+	return (NULL);
 }
 
-void    check_burn(t_config *data)
+void	check_burn(t_config *data)
 {
-    int	i;
+	int			i;
 	long long	time_sc;
 
 	i = 0;
 	while (i < data->number_of_coders)
 	{
-		time_sc = get_time_ms() - data->coders[i].last_compile_start;
-		if (time_sc > data->time_to_burnout)
+		time_sc = get_time_ms() - get_last_compile(&data->coders[i]);
+		if (time_sc >= data->time_to_burnout)
 		{
-			data->end = ++i;
+			set_end(data, ++i);
 			return ;
 		}
 		i++;
@@ -46,7 +51,7 @@ void    check_burn(t_config *data)
 	return ;
 }
 
-void    check_done(t_config *data)
+void	check_done(t_config *data)
 {
 	int	i;
 	int	count;
@@ -55,27 +60,30 @@ void    check_done(t_config *data)
 	count = 0;
 	while (i < data->number_of_coders)
 	{
-		if (data->coders[i].compile_count >= data->number_of_compiles_required)
+		if (get_compile_count(&data->coders[i]) >= data->number_of_compiles_required)
 			count++;
 		i++;
 	}
 	if (count == data->number_of_coders)
 	{
-		data->end = -1;
+		set_end(data, -1);
 		return ;
 	}
 	return ;
 }
 
-int sim_running(t_config *data)
+int	sim_running(t_config *data)
 {
-	if (data->end > 0)
+	int	end;
+
+	end = get_end(data);
+	if (end > 0)
 	{
-		log_event(&data->coders[data->end - 1], "burned out");
+		log_event(&data->coders[end - 1], "burned out");
 		wake_all_coders(data);
 		return (0);
 	}
-	else if (data->end == -1)
+	else if (end == -1)
 	{
 		printf("Programming ended\n");
 		return (0);
@@ -90,7 +98,9 @@ void	wake_all_coders(t_config *data)
 	i = 0;
 	while (i < data->number_of_coders)
 	{
+		pthread_mutex_lock(&data->dongles[i].mutex);
 		pthread_cond_broadcast(&data->dongles[i].cond);
+		pthread_mutex_unlock(&data->dongles[i].mutex);
 		i++;
 	}
 }
