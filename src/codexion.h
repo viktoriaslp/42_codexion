@@ -41,17 +41,17 @@ typedef struct s_coder
 	int				right_dongle;
 	pthread_t		thread;
 	long long		last_compile_start;
+	long long		request_order;
+	long long		request_deadline;
 	pthread_mutex_t	state_mutex;
 	struct s_config	*config;
 }	t_coder;
 
 typedef struct s_dongle
 {
-	int				id;
 	int				in_use;
 	long long		available_at;
 	pthread_mutex_t	mutex;
-	pthread_cond_t	cond;
 	t_coder			*queue[2];
 	int				queue_size;
 }	t_dongle;
@@ -68,62 +68,59 @@ typedef struct s_config
 	int				dongle_cooldown;
 	t_scheduler		scheduler; // only fifo or edf
 	long long		start_time;
+	long long		request_counter;
+
 	t_coder			*coders;
 	t_dongle		*dongles;
+
 	pthread_mutex_t	end_mutex;
 	pthread_mutex_t	print_mutex;
+	pthread_mutex_t	scheduler_mutex;
+	pthread_cond_t	scheduler_cond;
 	int				end; // 0: no, n: burn, -1: finish, -2: startup/error stop
 	pthread_t		monitor_thread;
 
 }	t_config;
 
-// initializing data structures
-int			print_usage(void);
+/* Initialization and cleanup */
 int			init_config(char **args, int count, t_config *data);
-int			parse_args(char **args, int count, t_config *data);
-t_coder		*init_coders(t_config *config);
-t_dongle	*init_dongles(int amount);
-long long	get_time_ms(void);
-void		ms_to_timespec(long long ms, struct timespec *ts);
-int			init_data_mtx(t_config *data);
-
-// auxiliary functions
-int			int_checker(const char *nptr);
-int			int_args_checker(char **args, int count);
-int			scheduler_check(const char *ptr, t_config *data);
-void		*ft_calloc(size_t nmemb, size_t size);
-
-// simulation data
-int			start_simulation(t_config *data);
-void		*coder_routine(void *args);
-void		log_event(t_coder *coder, const char *message);
-int			take_two_dongles(t_coder *coder);
-int			take_dongle(t_coder *coder, t_dongle *dongle);
-void		release_dongle(t_coder *coder, t_dongle *dongle);
-void		return_dongles(t_coder *coder);
-void		add_to_queue(t_dongle *dongle, t_coder *coder);
-t_coder		*pop_from_queue(t_dongle *dongle);
-int			begin_compile(t_coder *coder);
-int			wait_ms(t_config *data, int duration);
-
-// memory up
-int			clean_up(int status, t_config *data);
-void		clean_dongles(t_config *data);
+void		clean_up(t_config *data);
 void		clean_coders(t_config *data);
-void		c_m_destroy(int i, t_dongle *dongles);
-void		stop_created_coders(t_config *data, int created);
+void		destroy_shared_mutexes(t_config *data);
 
-// monitor
-void		*monitor(void *arg);
-void		check_done(t_config *data);
-void		check_burn(t_config *data);
-int			sim_running(t_config *data);
+/* Simulation and monitor */
+int			start_simulation(t_config *data);
+void		join_coders(t_config *data, int count);
+void		stop_created_coders(t_config *data, int created);
+void		*coder_routine(void *args);
+void		*monitor_routine(void *arg);
 void		wake_all_coders(t_config *data);
+
+/* Dongles and scheduling */
+int			take_two_dongles(t_coder *coder);
+void		release_dongles(t_coder *coder);
+void		add_to_queue(t_dongle *dongle, t_coder *coder);
+void		remove_from_queue(t_dongle *dongle, t_coder *coder);
+void		register_request(t_coder *coder, t_dongle *left, t_dongle *right);
+int			can_take_pair(t_coder *coder, t_dongle *left, t_dongle *right);
+void		reserve_pair(t_coder *coder, t_dongle *first, t_dongle *second);
+void		cancel_request(t_coder *coder, t_dongle *first, t_dongle *second);
+long long	max_available_at(t_coder *coder);
+
+/* Shared state */
 int			get_end(t_config *data);
 void		set_end(t_config *data, int value);
 long long	get_last_compile(t_coder *coder);
-int			get_compile_count(t_coder *coder);
 void		set_last_compile(t_coder *coder, long long value);
+int			get_compile_count(t_coder *coder);
 void		increment_compile_count(t_coder *coder);
+
+/* Utilities and parsing */
+int			parse_args(char **args, int count, t_config *data);
+int			print_usage(void);
+void		log_event(t_coder *coder, const char *message);
+long long	get_time_ms(void);
+void		ms_to_timespec(long long ms, struct timespec *ts);
+int			wait_ms(t_config *data, int duration);
 
 #endif

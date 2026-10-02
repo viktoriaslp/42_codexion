@@ -1,46 +1,54 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   config_init.c                                      :+:      :+:    :+:   */
+/*   003_config_init.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vslyunko <vslyunko@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/09 15:26:23 by vslyunko          #+#    #+#             */
-/*   Updated: 2026/09/25 21:43:25 by vslyunko         ###   ########.fr       */
+/*   Created: 2026/09/07 16:21:51 by vslyunko          #+#    #+#             */
+/*   Updated: 2026/10/01 16:32:50 by vslyunko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-int	init_config(char **args, int count, t_config *data)
+static void	*ft_calloc(size_t nmemb, size_t size)
 {
-	if (parse_args(args, count, data) != 0)
+	void	*memalloc;
+
+	memalloc = (void *) malloc(nmemb * size);
+	if (!memalloc)
+		return (NULL);
+	memset(memalloc, 0, (nmemb * size));
+	return (memalloc);
+}
+
+static int	init_shared_mutexes(t_config *data)
+{
+	if (pthread_mutex_init(&data->print_mutex, NULL) != 0)
+		return (1);
+	if (pthread_mutex_init(&data->end_mutex, NULL) != 0)
 	{
-		print_usage();
+		pthread_mutex_destroy(&data->print_mutex);
 		return (1);
 	}
-	data->end = 0;
-	if (init_data_mtx(data) != 0)
-		return (1);
-	data->coders = init_coders(data);
-	if (!data->coders)
+	if (pthread_mutex_init(&data->scheduler_mutex, NULL) != 0)
 	{
 		pthread_mutex_destroy(&data->end_mutex);
 		pthread_mutex_destroy(&data->print_mutex);
 		return (1);
 	}
-	data->dongles = init_dongles(data->number_of_coders);
-	if (!data->dongles)
+	if (pthread_cond_init(&data->scheduler_cond, NULL) != 0)
 	{
 		pthread_mutex_destroy(&data->end_mutex);
 		pthread_mutex_destroy(&data->print_mutex);
-		clean_coders(data);
+		pthread_mutex_destroy(&data->scheduler_mutex);
 		return (1);
 	}
 	return (0);
 }
 
-t_coder	*init_coders(t_config *config)
+static t_coder	*init_coders(t_config *config)
 {
 	t_coder	*arr_coders;
 	int		i;
@@ -67,7 +75,7 @@ t_coder	*init_coders(t_config *config)
 	return (arr_coders);
 }
 
-t_dongle	*init_dongles(int amount)
+static t_dongle	*init_dongles(int amount)
 {
 	t_dongle	*arr_dongles;
 	int			i;
@@ -78,17 +86,10 @@ t_dongle	*init_dongles(int amount)
 	i = 0;
 	while (i < amount)
 	{
-		arr_dongles[i].id = i + 1;
 		if (pthread_mutex_init(&arr_dongles[i].mutex, NULL) != 0)
 		{
-			c_m_destroy(i, arr_dongles);
-			free(arr_dongles);
-			return (NULL);
-		}
-		if (pthread_cond_init(&arr_dongles[i].cond, NULL) != 0)
-		{
-			pthread_mutex_destroy(&arr_dongles[i].mutex);
-			c_m_destroy(i, arr_dongles);
+			while (--i >= 0)
+				pthread_mutex_destroy(&arr_dongles[i].mutex);
 			free(arr_dongles);
 			return (NULL);
 		}
@@ -97,35 +98,29 @@ t_dongle	*init_dongles(int amount)
 	return (arr_dongles);
 }
 
-void	c_m_destroy(int i, t_dongle *dongles)
+int	init_config(char **args, int count, t_config *data)
 {
-	while (--i >= 0)
+	if (parse_args(args, count, data) != 0)
 	{
-		pthread_cond_destroy(&dongles[i].cond);
-		pthread_mutex_destroy(&dongles[i].mutex);
-	}
-}
-
-// returns 0 in case of succes || returns 1 in case of failure
-int	init_data_mtx(t_config *data)
-{
-	if (pthread_mutex_init(&data->print_mutex, NULL) != 0)
+		print_usage();
 		return (1);
-	if (pthread_mutex_init(&data->end_mutex, NULL) != 0)
+	}
+	data->end = 0;
+	data->request_counter = 0;
+	if (init_shared_mutexes(data) != 0)
+		return (1);
+	data->coders = init_coders(data);
+	if (!data->coders)
 	{
-		pthread_mutex_destroy(&data->print_mutex);
+		destroy_shared_mutexes(data);
+		return (1);
+	}
+	data->dongles = init_dongles(data->number_of_coders);
+	if (!data->dongles)
+	{
+		destroy_shared_mutexes(data);
+		clean_coders(data);
 		return (1);
 	}
 	return (0);
-}
-
-void	*ft_calloc(size_t nmemb, size_t size)
-{
-	void	*memalloc;
-
-	memalloc = (void *) malloc(nmemb * size);
-	if (!memalloc)
-		return (NULL);
-	memset(memalloc, 0, (nmemb * size));
-	return (memalloc);
 }
