@@ -1,6 +1,6 @@
 NAME = codexion
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -pthread -Isrc. -g
+CFLAGS = -Wall -Wextra -Werror -pthread -Isrc -g
 RM = rm -f
 ARGS ?= 5 10000 200 200 200 3 50 fifo
 
