@@ -25,9 +25,11 @@ static int	validate_nonnegative_int(const char *nptr, int *nbr)
 		i++;
 	while (nptr[i] >= '0' && nptr[i] <= '9')
 	{
-		if (nb > (2147483647 - (nptr[i] - '0')) / 10)
-			return (1);
+		// if (nb > (2147483647 - (nptr[i] - '0')) / 10)
+		// 	return (1);
 		nb = nb * 10 + (nptr[i] - '0');
+		if (nb > 2147483647)
+			return (1);
 		i++;
 	}
 	if (nptr[i] != '\0' || nptr[0] == '\0')

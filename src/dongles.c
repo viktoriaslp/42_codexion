@@ -12,17 +12,46 @@
 
 #include "codexion.h"
 
-static void	lock_pair(t_dongle *first, t_dongle *second)
+// static void	lock_pair(t_dongle *first, t_dongle *second)
+// {
+// 	pthread_mutex_lock(&first->mutex);
+// 	pthread_mutex_lock(&second->mutex);
+// }
+
+// static void	unlock_pair(t_dongle *first, t_dongle *second)
+// {
+// 	pthread_mutex_unlock(&second->mutex);
+// 	pthread_mutex_unlock(&first->mutex);
+// }
+
+void	lock_pair(t_dongle *first, t_dongle *second)
 {
-	pthread_mutex_lock(&first->mutex);
-	pthread_mutex_lock(&second->mutex);
+	if (first < second)
+	{
+		pthread_mutex_lock(&first->mutex);
+		pthread_mutex_lock(&second->mutex);
+	}
+	else
+	{
+		pthread_mutex_lock(&second->mutex);
+		pthread_mutex_lock(&first->mutex);
+	}
 }
 
-static void	unlock_pair(t_dongle *first, t_dongle *second)
+void	unlock_pair(t_dongle *first, t_dongle *second)
 {
-	pthread_mutex_unlock(&second->mutex);
-	pthread_mutex_unlock(&first->mutex);
+	if (first < second)
+	{
+		pthread_mutex_unlock(&second->mutex);
+		pthread_mutex_unlock(&first->mutex);
+	}
+	else
+	{
+		pthread_mutex_unlock(&first->mutex);
+		pthread_mutex_unlock(&second->mutex);
+	}
 }
+
 
 static void	wait_once(t_coder *coder,
 	t_dongle *first, t_dongle *second)

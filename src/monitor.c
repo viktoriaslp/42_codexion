@@ -21,7 +21,7 @@ static void	check_burn(t_config *data)
 	while (i < data->number_of_coders)
 	{
 		time_sc = get_time_ms() - get_last_compile(&data->coders[i]);
-		if (time_sc >= data->time_to_burnout)
+		if (time_sc > data->time_to_burnout)
 		{
 			set_end(data, ++i);
 			return ;

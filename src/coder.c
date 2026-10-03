@@ -24,7 +24,7 @@ static int	begin_compile(t_coder *coder)
 	if (coder->config->end == 0)
 	{
 		if (now - coder->last_compile_start
-			>= coder->config->time_to_burnout)
+			> coder->config->time_to_burnout)
 			coder->config->end = coder->id;
 		else
 		{
@@ -86,15 +86,13 @@ void	release_dongles(t_coder *coder)
 	first = &coder->config->dongles[coder->left_dongle];
 	second = &coder->config->dongles[coder->right_dongle];
 	pthread_mutex_lock(&coder->config->scheduler_mutex);
-	pthread_mutex_lock(&first->mutex);
-	pthread_mutex_lock(&second->mutex);
+	lock_pair(first, second);
 	available_at = get_time_ms() + coder->config->dongle_cooldown;
 	first->in_use = 0;
 	second->in_use = 0;
 	first->available_at = available_at;
 	second->available_at = available_at;
-	pthread_mutex_unlock(&first->mutex);
-	pthread_mutex_unlock(&second->mutex);
+	unlock_pair(first, second);
 	pthread_cond_broadcast(&coder->config->scheduler_cond);
 	pthread_mutex_unlock(&coder->config->scheduler_mutex);
 }

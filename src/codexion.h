@@ -106,6 +106,8 @@ int			can_take_pair(t_coder *coder, t_dongle *left, t_dongle *right);
 void		reserve_pair(t_coder *coder, t_dongle *first, t_dongle *second);
 void		cancel_request(t_coder *coder, t_dongle *first, t_dongle *second);
 long long	max_available_at(t_coder *coder);
+void	lock_pair(t_dongle *first, t_dongle *second);
+void	unlock_pair(t_dongle *first, t_dongle *second);
 
 /* Shared state */
 int			get_end(t_config *data);
